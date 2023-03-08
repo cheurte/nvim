@@ -41,11 +41,19 @@ nnoremap o o<esc>
 nnoremap O O<esc>
 
 " You can split the window in Vim by typing :split or :vsplit.
-" Navigate the split view easier by pressing CTRL+j, CTRL+k, CTRL+h, or CTRL+l.
-nnoremap <c-j> <c-w>j
-nnoremap <c-k> <c-w>k
-nnoremap <c-h> <c-w>h
-nnoremap <c-l> <c-w>l
+" Navigate the split view easier by pressing Alt+j, Alt+k, Alt+h, or Alt+l.
+:tnoremap <A-h> <C-\><C-N><C-w>h
+:tnoremap <A-j> <C-\><C-N><C-w>j
+:tnoremap <A-k> <C-\><C-N><C-w>k
+:tnoremap <A-l> <C-\><C-N><C-w>l
+:inoremap <A-h> <C-\><C-N><C-w>h
+:inoremap <A-j> <C-\><C-N><C-w>j
+:inoremap <A-k> <C-\><C-N><C-w>k
+:inoremap <A-l> <C-\><C-N><C-w>l
+:nnoremap <A-h> <C-w>h
+:nnoremap <A-j> <C-w>j
+:nnoremap <A-k> <C-w>k
+:nnoremap <A-l> <C-w>l
 
 " Resize split windows using arrow keys by pressing:
 " CTRL+UP, CTRL+DOWN, CTRL+LEFT, or CTRL+RIGHT.
@@ -94,8 +102,11 @@ set encoding=UTF-8
 " Comment
  Plug 'tomtom/tcomment_vim'
 
- " Battery 
-"  Plug 'lambdalisue/battery.vim'
+" Sudo modifying files
+Plug 'lambdalisue/suda.vim'
+
+" Battery
+Plug 'lambdalisue/battery.vim'
 
 call plug#end()
 
@@ -130,7 +141,7 @@ autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTr
 " Close the tab if NERDTree is the only window remaining in it.
 autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 " Have nerdtree ignore certain files and directories.
-let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
+" let NERDTreeIgnore=['\.git$', '\.jpg$', '\.mp4$', '\.ogg$', '\.iso$', '\.pdf$', '\.pyc$', '\.odt$', '\.png$', '\.gif$', '\.db$']
 
 " Autocompletion
 " use <tab> to trigger completion and navigate to the next complete item
@@ -202,3 +213,29 @@ let g:WebDevIconsUnicodeDecorateFolderNodeDefaultSymbol = ''
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols = {}
 let g:WebDevIconsUnicodeDecorateFileNodesExtensionSymbols['nerdtree'] = ''
 let g:WebDevIconsUnicodeDecorateFolderNodes = 1
+
+" Terminal mode 
+:tnoremap <Esc> <C-\><C-n>
+
+" Battery
+set tabline=...%{battery#component()}...
+set statusline=...%{battery#component()}...
+let g:battery#update_tabline = 1    " For tabline.
+let g:battery#update_statusline = 1 " For statusline.
+let g:airline#extentions#battery#enabled = 1
+let g:battery#update_interval = 30000
+let g:battery_watch_on_startup = 1
+function! Battery_icon() 
+  let l:battery_icon = {
+    \ 5: " ",
+    \ 4: " ",
+    \ 3: " ",
+    \ 2: " ",
+    \ 1: " "}
+    
+  let l:backend = battery#backend()
+  let l:nf = float2nr(round(backend.value / 20.0))
+  return printf('%s', get(battery_icon, nf))
+endfunction
+let g:airline_section_x = airline#section#create(['%{battery#sign()} %{battery#value()}%% %{Battery_icon()}'])
+
