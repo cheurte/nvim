@@ -1,4 +1,3 @@
-
 set nocompatible            " disable compatibility to old-time vi
 set showmatch               " show matching 
 set ignorecase              " case insensitive 
@@ -10,6 +9,13 @@ set softtabstop=4           " see multiple spaces as tabstops so <BS> does the r
 set expandtab               " converts tabs to white space
 set shiftwidth=4            " width for autoindents
 set autoindent              " indent a new line the same amount as the line just typed
+set foldtext=CustomFoldText()
+set nofoldenable
+set foldlevel=99
+set fillchars=fold:\ 
+setlocal foldmethod=expr
+setlocal foldexpr=GetPotionFold(v:lnum)
+set foldcolumn=3
 set number                  " add line numbers
 set wildmode=longest,list   " get bash-like tab completions
 set cc=80                  " set an 80 column border for good coding style
@@ -83,41 +89,59 @@ call plug#begin("~/.vim/plugged")
 " Appearence
  Plug 'ryanoasis/vim-devicons'
 set encoding=UTF-8
- Plug 'vim-airline/vim-airline'
- Plug 'vim-airline/vim-airline-themes'
- Plug 'morhetz/gruvbox'
+    " Theme & ariline
+    Plug 'vim-airline/vim-airline'
+    Plug 'vim-airline/vim-airline-themes'
+    Plug 'morhetz/gruvbox'
+    Plug 'bluz71/vim-moonfly-colors', { 'as': 'moonfly' }
+    Plug 'jacoborus/tender.vim'
+    Plug 'patstockwell/vim-monokai-tasty'
+    Plug 'ayu-theme/ayu-vim'
 
-" Tree
- Plug 'scrooloose/nerdtree'
+    " Tree
+    Plug 'scrooloose/nerdtree'
 
-" Starting
- Plug 'mhinz/vim-startify'
+    " Starting
+    Plug 'mhinz/vim-startify'
 
-" Auto pairs
- Plug 'jiangmiao/auto-pairs'
+    " Auto pairs
+    Plug 'jiangmiao/auto-pairs'
 
-" Auto completion
- Plug 'neoclide/coc.nvim', {'branch': 'release'}
+    " Auto completion
+    Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
-" Comment
- Plug 'tomtom/tcomment_vim'
+    " Comment
+    Plug 'tomtom/tcomment_vim'
 
-" Sudo modifying files
-Plug 'lambdalisue/suda.vim'
+    " Sudo modifying files
+    Plug 'lambdalisue/suda.vim'
 
-" Battery
-Plug 'lambdalisue/battery.vim'
+    " Battery
+    Plug 'lambdalisue/battery.vim'
 
 call plug#end()
 
 set termguicolors
 syntax enable
 set background=dark 
+
+" let g:gruvbox_material_background = 'hard'
+" let g:gruvbox_material_menu_selection_background='yellow'
 colorscheme gruvbox
+" let g:gruvbox_contrast_dark
+" colorscheme moonfly
+colorscheme tender
+" let ayucolor="mirage"   " dark, mirage, light
+" colorscheme ayu
+" let g:vim_monokai_tasty_italic = 1
+" colorscheme vim-monokai-tasty
+" let g:lightline = { 'colorscheme': 'moonfly' }
+
 " Set a custom font you have installed on your computer.
 " Syntax: set guifont=<font_name>\ <font_weight>\ <size>
 " set guifont=Monospace\ Regular\ 12
 set guifont=DroidSansMono\ Nerd\ Font\ 11
+
 " set guifont=PowerlineSymbols\ 11
 " Vim jump to the last position when reopening a file
 if has("autocmd")
@@ -172,6 +196,7 @@ vnoremap <C-c> :TComment<CR>
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
 let g:airline_theme='google_dark'
+" let g:airline_theme = 'tender'
 let g:airline#extensions#tabline#left_sep = ' '
 let g:airline#extensions#tabline#left_alt_sep = '|'
 let g:airline_highlighting_cache = 1
@@ -238,4 +263,71 @@ function! Battery_icon()
   return printf('%s', get(battery_icon, nf))
 endfunction
 let g:airline_section_x = airline#section#create(['%{battery#sign()} %{battery#value()}%% %{Battery_icon()}'])
+
+" Custom fold function
+" function! CustomFoldText()
+"   let indentation = indent(v:foldstart - 1)
+"   let foldSize = 1 + v:foldend - v:foldstart
+"   let foldSizeStr = " " . foldSize . " lines "
+"   let foldLevelStr = repeat("+--", v:foldlevel)
+"   let expansionString = repeat(" ", indentation)
+"
+"   return expansionString . foldLevelStr . foldSizeStr
+" endfunction
+function! GetPotionFold(lnum)
+  if getline(a:lnum) =~? '\v^\s*$'
+    return '-1'
+  endif
+
+  let this_indent = IndentLevel(a:lnum)
+  let next_indent = IndentLevel(NextNonBlankLine(a:lnum))
+
+  if next_indent == this_indent
+    return this_indent
+  elseif next_indent < this_indent
+    return this_indent
+  elseif next_indent > this_indent
+    return '>' . next_indent
+  endif
+endfunction
+
+function! IndentLevel(lnum)
+    return indent(a:lnum) / &shiftwidth
+endfunction
+
+function! NextNonBlankLine(lnum)
+  let numlines = line('$')
+  let current = a:lnum + 1
+
+  while current <= numlines
+      if getline(current) =~? '\v\S'
+          return current
+      endif
+
+      let current += 1
+  endwhile
+
+  return -2
+endfunction
+
+function! CustomFoldText()
+  " get first non-blank line
+  let fs = v:foldstart
+
+  while getline(fs) =~ '^\s*$' | let fs = nextnonblank(fs + 1)
+  endwhile
+
+  if fs > v:foldend
+      let line = getline(v:foldstart)
+  else
+      let line = substitute(getline(fs), '\t', repeat(' ', &tabstop), 'g')
+  endif
+
+  let w = winwidth(0) - &foldcolumn - (&number ? 8 : 0)
+  let foldSize = 1 + v:foldend - v:foldstart
+  let foldSizeStr = " " . foldSize . " lines "
+  let foldLevelStr = repeat("+--", v:foldlevel)
+  let expansionString = repeat(" ", w - strwidth(foldSizeStr.line.foldLevelStr))
+  return line . expansionString . foldSizeStr . foldLevelStr
+endfunction
 
