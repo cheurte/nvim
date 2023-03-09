@@ -16,8 +16,9 @@ set fillchars=fold:\
 setlocal foldmethod=expr
 setlocal foldexpr=GetPotionFold(v:lnum)
 set foldcolumn=3
-set number                  " add line numbers
-set wildmode=longest,list   " get bash-like tab completions
+set number " add line numbers
+" set wildmenu wildoptions=pum
+" set wildmode=longest:full,full   " get bash-like tab completions
 set cc=80                  " set an 80 column border for good coding style
 filetype plugin indent on   "allow auto-indenting depending on file type
 syntax on                   " syntax highlighting
@@ -97,9 +98,11 @@ set encoding=UTF-8
     Plug 'jacoborus/tender.vim'
     Plug 'patstockwell/vim-monokai-tasty'
     Plug 'ayu-theme/ayu-vim'
-
+    Plug 'Yggdroot/indentLine'
+    
     " Tree
     Plug 'scrooloose/nerdtree'
+    Plug 'PhilRunninger/nerdtree-visual-selection'
 
     " Starting
     Plug 'mhinz/vim-startify'
@@ -119,19 +122,28 @@ set encoding=UTF-8
     " Battery
     Plug 'lambdalisue/battery.vim'
 
+    " wildmenu
+    function! UpdateRemotePlugins(...)
+        " Needed to refresh runtime files
+        let &rtp=&rtp
+        UpdateRemotePlugins
+    endfunction
+
+    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
+
 call plug#end()
 
 set termguicolors
 syntax enable
 set background=dark 
 
-" let g:gruvbox_material_background = 'hard'
+let g:gruvbox_material_background = 'hard'
 " let g:gruvbox_material_menu_selection_background='yellow'
 colorscheme gruvbox
 " let g:gruvbox_contrast_dark
 " colorscheme moonfly
-colorscheme tender
-" let ayucolor="mirage"   " dark, mirage, light
+" colorscheme tender
+" let ayucolor="dark"   " dark, mirage, light
 " colorscheme ayu
 " let g:vim_monokai_tasty_italic = 1
 " colorscheme vim-monokai-tasty
@@ -265,30 +277,31 @@ endfunction
 let g:airline_section_x = airline#section#create(['%{battery#sign()} %{battery#value()}%% %{Battery_icon()}'])
 
 " Custom fold function
-" function! CustomFoldText()
-"   let indentation = indent(v:foldstart - 1)
-"   let foldSize = 1 + v:foldend - v:foldstart
-"   let foldSizeStr = " " . foldSize . " lines "
-"   let foldLevelStr = repeat("+--", v:foldlevel)
-"   let expansionString = repeat(" ", indentation)
-"
-"   return expansionString . foldLevelStr . foldSizeStr
-" endfunction
+function! CustomFoldText_1()
+  let indentation = indent(v:foldstart - 1)
+  let foldSize = 1 + v:foldend - v:foldstart
+  let foldSizeStr = " " . foldSize . " lines "
+  let foldLevelStr = repeat("+--", v:foldlevel)
+  let expansionString = repeat(" ", indentation)
+
+  return expansionString . foldLevelStr . foldSizeStr
+endfunction
+
 function! GetPotionFold(lnum)
-  if getline(a:lnum) =~? '\v^\s*$'
-    return '-1'
-  endif
+    if getline(a:lnum) =~? '\v^\s*$'
+        return '-1'
+    endif
 
-  let this_indent = IndentLevel(a:lnum)
-  let next_indent = IndentLevel(NextNonBlankLine(a:lnum))
+    let this_indent = IndentLevel(a:lnum)
+    let next_indent = IndentLevel(NextNonBlankLine(a:lnum))
 
-  if next_indent == this_indent
-    return this_indent
-  elseif next_indent < this_indent
-    return this_indent
-  elseif next_indent > this_indent
-    return '>' . next_indent
-  endif
+    if next_indent == this_indent
+        return this_indent
+    elseif next_indent < this_indent
+        return this_indent
+    elseif next_indent > this_indent
+        return '>' . next_indent
+    endif
 endfunction
 
 function! IndentLevel(lnum)
@@ -330,4 +343,67 @@ function! CustomFoldText()
   let expansionString = repeat(" ", w - strwidth(foldSizeStr.line.foldLevelStr))
   return line . expansionString . foldSizeStr . foldLevelStr
 endfunction
+
+" Tab show
+let g:indentLine_setColors = 0
+let g:indentLine_defaultGroup = 'SpecialKey'
+let g:indentLine_char_list = ['|', '¦', '┆', '┊']
+
+:augroup numertoggle
+:  autocmd!
+:  autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu && mode() != "i" | set rnu   | endif
+:  autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu                  | set nornu | endif
+:augroup END
+
+" wild menu plugin
+call wilder#setup({'modes': [':', '/', '?']})
+
+call wilder#set_option('pipeline', [
+    \   wilder#branch(
+    \     wilder#python_file_finder_pipeline({
+    \       'file_command': ['find', '.', '-type', 'f', '-printf', '%P\n'],
+    \       'dir_command': ['find', '.', '-type', 'd', '-printf', '%P\n'],
+    \       'filters': ['fuzzy_filter', 'difflib_sorter'],
+    \     }),
+    \     wilder#cmdline_pipeline(),
+    \     wilder#python_search_pipeline(),
+    \   ),
+    \ ])
+
+call wilder#set_option('renderer', wilder#popupmenu_renderer({
+    \ 'highlighter': [
+    \   wilder#lua_pcre2_highlighter(),
+    \   wilder#lua_fzy_highlighter(),
+    \ ],
+    \ 'highlights': {
+    \   'accent': wilder#make_hl('WilderAccent', 'Pmenu', [{}, {}, {'foreground': '#f4468f'}]),
+    \ },
+    \ 'pumblend': 20,
+    \ 'left': [
+    \   ' ', wilder#popupmenu_devicons(),
+    \ ],
+    \ 'right': [
+    \   ' ', wilder#popupmenu_scrollbar(),
+    \ ],
+    \ }))
+
+call wilder#set_option('renderer', wilder#popupmenu_renderer(wilder#popupmenu_border_theme({
+    \ 'highlights': {
+    \   'border': 'Normal',
+    \ },
+    \ 'border': 'rounded',
+    \ })))
+
+call wilder#set_option('renderer', wilder#popupmenu_renderer(wilder#popupmenu_palette_theme({
+    \ 'border': 'rounded',
+    \ 'max_height': '75%',
+    \ 'min_height': 0,
+    \ 'prompt_position': 'top',
+    \ 'reverse': 0,
+    \ })))
+
+call wilder#set_option('renderer', wilder#renderer_mux({
+      \ ':': wilder#popupmenu_renderer(wilder#popupmenu_palette_theme()),
+      \ '/': wilder#popupmenu_renderer(),
+      \ }))
 
