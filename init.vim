@@ -14,16 +14,8 @@ set autoindent              " indent a new line the same amount as the line just
 autocmd Filetype * AnyFoldActivate
 set foldlevel=99
 hi Folded term=underline
-" set foldtext=CustomFoldText()
-" set nofoldenable
-" set foldlevel=99
-" set fillchars=fold:\ 
-" setlocal foldmethod=indent
-" setlocal foldexpr=GetPotionFold(v:lnum)
 set foldcolumn=3
 set number " add line numbers
-" set wildmenu wildoptions=pum
-" set wildmode=longest:full,full   " get bash-like tab completions
 set cc=80                  " set an 80 column border for good coding style
 filetype plugin indent on   "allow auto-indenting depending on file type
 syntax on                   " syntax highlighting
@@ -227,7 +219,7 @@ vnoremap <C-c> :TComment<CR>
 " Airline
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
-let g:airline_theme='google_dark'
+let g:airline_theme='wonbat'
 " let g:airline_theme = 'tender'
 " let g:airline_theme='gruvbox'
 let g:airline#extensions#tabline#left_sep = ' '
@@ -381,6 +373,7 @@ let g:indentLine_setColors = 0
 let g:indentLine_defaultGroup = 'SpecialKey'
 let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 
+" Number fix and relative
 :augroup numertoggle
 :  autocmd!
 :  autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu && mode() != "i" | set rnu   | endif
