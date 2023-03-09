@@ -1,3 +1,5 @@
+let g:polyglot_disabled = ['markdown']
+let g:polyglot_disabled = ['markdown.plugin']
 set nocompatible            " disable compatibility to old-time vi
 set showmatch               " show matching 
 set ignorecase              " case insensitive 
@@ -9,12 +11,15 @@ set softtabstop=4           " see multiple spaces as tabstops so <BS> does the r
 set expandtab               " converts tabs to white space
 set shiftwidth=4            " width for autoindents
 set autoindent              " indent a new line the same amount as the line just typed
-set foldtext=CustomFoldText()
-set nofoldenable
+autocmd Filetype * AnyFoldActivate
 set foldlevel=99
-set fillchars=fold:\ 
-setlocal foldmethod=expr
-setlocal foldexpr=GetPotionFold(v:lnum)
+hi Folded term=underline
+" set foldtext=CustomFoldText()
+" set nofoldenable
+" set foldlevel=99
+" set fillchars=fold:\ 
+" setlocal foldmethod=indent
+" setlocal foldexpr=GetPotionFold(v:lnum)
 set foldcolumn=3
 set number " add line numbers
 " set wildmenu wildoptions=pum
@@ -83,6 +88,10 @@ augroup END
 " nnoremap <>
 inoremap jj <ESC>
 
+" Automatic tab
+vnoremap < <gv
+vnoremap > >gv
+
 call plug#begin("~/.vim/plugged")
 
 "Plugin Section
@@ -94,6 +103,7 @@ set encoding=UTF-8
     Plug 'vim-airline/vim-airline'
     Plug 'vim-airline/vim-airline-themes'
     Plug 'morhetz/gruvbox'
+    Plug 'sainnhe/gruvbox-material'
     Plug 'bluz71/vim-moonfly-colors', { 'as': 'moonfly' }
     Plug 'jacoborus/tender.vim'
     Plug 'patstockwell/vim-monokai-tasty'
@@ -131,6 +141,12 @@ set encoding=UTF-8
 
     Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
 
+    " Folding
+    Plug 'pseewald/vim-anyfold'
+
+    " Language
+    Plug 'sheerun/vim-polyglot'
+
 call plug#end()
 
 set termguicolors
@@ -138,8 +154,12 @@ syntax enable
 set background=dark 
 
 let g:gruvbox_material_background = 'hard'
-" let g:gruvbox_material_menu_selection_background='yellow'
-colorscheme gruvbox
+let g:gruvbox_material_foreground = 'original'
+let g:gruvbox_material_disable_italic_comment='0'
+let g:gruvbox_material_enable_bold='1'
+" let g:gruvbox_material_visual='reverse'
+" let g:gruvbox_material_sign_column_background='grey'
+colorscheme gruvbox-material
 " let g:gruvbox_contrast_dark
 " colorscheme moonfly
 " colorscheme tender
@@ -209,6 +229,7 @@ let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
 let g:airline_theme='google_dark'
 " let g:airline_theme = 'tender'
+" let g:airline_theme='gruvbox'
 let g:airline#extensions#tabline#left_sep = ' '
 let g:airline#extensions#tabline#left_alt_sep = '|'
 let g:airline_highlighting_cache = 1
@@ -275,75 +296,86 @@ function! Battery_icon()
   return printf('%s', get(battery_icon, nf))
 endfunction
 let g:airline_section_x = airline#section#create(['%{battery#sign()} %{battery#value()}%% %{Battery_icon()}'])
-
-" Custom fold function
-function! CustomFoldText_1()
-  let indentation = indent(v:foldstart - 1)
-  let foldSize = 1 + v:foldend - v:foldstart
-  let foldSizeStr = " " . foldSize . " lines "
-  let foldLevelStr = repeat("+--", v:foldlevel)
-  let expansionString = repeat(" ", indentation)
-
-  return expansionString . foldLevelStr . foldSizeStr
-endfunction
-
-function! GetPotionFold(lnum)
-    if getline(a:lnum) =~? '\v^\s*$'
-        return '-1'
-    endif
-
-    let this_indent = IndentLevel(a:lnum)
-    let next_indent = IndentLevel(NextNonBlankLine(a:lnum))
-
-    if next_indent == this_indent
-        return this_indent
-    elseif next_indent < this_indent
-        return this_indent
-    elseif next_indent > this_indent
-        return '>' . next_indent
-    endif
-endfunction
-
-function! IndentLevel(lnum)
-    return indent(a:lnum) / &shiftwidth
-endfunction
-
-function! NextNonBlankLine(lnum)
-  let numlines = line('$')
-  let current = a:lnum + 1
-
-  while current <= numlines
-      if getline(current) =~? '\v\S'
-          return current
-      endif
-
-      let current += 1
-  endwhile
-
-  return -2
-endfunction
-
-function! CustomFoldText()
-  " get first non-blank line
-  let fs = v:foldstart
-
-  while getline(fs) =~ '^\s*$' | let fs = nextnonblank(fs + 1)
-  endwhile
-
-  if fs > v:foldend
-      let line = getline(v:foldstart)
-  else
-      let line = substitute(getline(fs), '\t', repeat(' ', &tabstop), 'g')
-  endif
-
-  let w = winwidth(0) - &foldcolumn - (&number ? 8 : 0)
-  let foldSize = 1 + v:foldend - v:foldstart
-  let foldSizeStr = " " . foldSize . " lines "
-  let foldLevelStr = repeat("+--", v:foldlevel)
-  let expansionString = repeat(" ", w - strwidth(foldSizeStr.line.foldLevelStr))
-  return line . expansionString . foldSizeStr . foldLevelStr
-endfunction
-
+"
+" " Custom fold function
+" function! CustomFoldText_2()
+"   let indentation = indent(v:foldstart - 1)
+"   let foldSize = 1 + v:foldend - v:foldstart
+"   let foldSizeStr = " " . foldSize . " lines "
+"   let foldLevelStr = repeat("+--", v:foldlevel)
+"   let expansionString = repeat(" ", indentation)
+"
+"   return expansionString . foldLevelStr . foldSizeStr
+" endfunction
+"
+"
+" function! CustomFoldText_1()
+"   let indentation = indent(v:foldstart - 1)
+"   let foldSize = 1 + v:foldend - v:foldstart
+"   let foldSizeStr = " " . foldSize . " lines "
+"   let foldLevelStr = repeat("+--", v:foldlevel)
+"   let expansionString = repeat(" ", indentation)
+"
+"   return expansionString . foldLevelStr . foldSizeStr
+" endfunction
+"
+" function! GetPotionFold(lnum)
+"     if getline(a:lnum) =~? '\v^\s*$'
+"         return '-1'
+"     endif
+"
+"     let this_indent = IndentLevel(a:lnum)
+"     let next_indent = IndentLevel(NextNonBlankLine(a:lnum))
+"
+"     if next_indent == this_indent
+"         return this_indent
+"     elseif next_indent < this_indent
+"         return this_indent
+"     elseif next_indent > this_indent
+"         return '>' . next_indent
+"     endif
+" endfunction
+"
+" function! IndentLevel(lnum)
+"     return indent(a:lnum) / &shiftwidth
+" endfunction
+"
+" function! NextNonBlankLine(lnum)
+"   let numlines = line('$')
+"   let current = a:lnum + 1
+"
+"   while current <= numlines
+"       if getline(current) =~? '\v\S'
+"           return current
+"       endif
+"
+"       let current += 1
+"   endwhile
+"
+"   return -2
+" endfunction
+"
+" function! CustomFoldText()
+"   " get first non-blank line
+"   let fs = v:foldstart
+"
+"   while getline(fs) =~ '^\s*$' | let fs = nextnonblank(fs + 1)
+"   endwhile
+"
+"   if fs > v:foldend
+"       let line = getline(v:foldstart)
+"   else
+"       let line = substitute(getline(fs), '\t', repeat(' ', &tabstop), 'g')
+"   endif
+"
+"   let w = winwidth(0) - &foldcolumn - (&number ? 8 : 0)
+"   let foldSize = 1 + v:foldend - v:foldstart
+"   let foldSizeStr = " " . foldSize . " lines "
+"   let foldLevelStr = repeat("+--", v:foldlevel)
+"   let expansionString = repeat(" ", w - strwidth(foldSizeStr.line.foldLevelStr))
+"   return line . expansionString . foldSizeStr . foldLevelStr
+" endfunction
+"
 " Tab show
 let g:indentLine_setColors = 0
 let g:indentLine_defaultGroup = 'SpecialKey'

@@ -8,3 +8,7 @@ To be set on ~/.config/nvim/
 or /usr/share/nvim/ and be renamed sysinit.vim
 
 Some Extra installation might be needed for using coc. 
+
+For having a better folding view:
+Change in ~/.vim/plugged/gruvbox-material/colors on line 69:
+call gruvbox_material#highlight('Folded', s:palette.yellow, s:palette.bg0, 'bold')
