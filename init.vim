@@ -86,11 +86,11 @@ vnoremap > >gv
 
 call plug#begin("~/.vim/plugged")
 
-"Plugin Section
+    "Plugin Section
 
-" Appearence
- Plug 'ryanoasis/vim-devicons'
-set encoding=UTF-8
+    " Appearence
+     Plug 'ryanoasis/vim-devicons'
+    set encoding=UTF-8
     " Theme & ariline
     Plug 'vim-airline/vim-airline'
     Plug 'vim-airline/vim-airline-themes'
@@ -98,10 +98,9 @@ set encoding=UTF-8
     Plug 'sainnhe/gruvbox-material'
     Plug 'bluz71/vim-moonfly-colors', { 'as': 'moonfly' }
     Plug 'jacoborus/tender.vim'
-    Plug 'patstockwell/vim-monokai-tasty'
     Plug 'ayu-theme/ayu-vim'
     Plug 'Yggdroot/indentLine'
-    
+    "
     " Tree
     Plug 'scrooloose/nerdtree'
     Plug 'PhilRunninger/nerdtree-visual-selection'
@@ -114,6 +113,8 @@ set encoding=UTF-8
 
     " Auto completion
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
+
+    " Jedi python
 
     " Comment
     Plug 'tomtom/tcomment_vim'
@@ -139,34 +140,26 @@ set encoding=UTF-8
     " Language
     Plug 'sheerun/vim-polyglot'
 
+    " search file
+    Plug 'ctrlpvim/ctrlp.vim'   
+
+    Plug 'tpope/vim-surround'
+
 call plug#end()
 
 set termguicolors
 syntax enable
-set background=dark 
+" set background=dark 
 
 let g:gruvbox_material_background = 'hard'
 let g:gruvbox_material_foreground = 'original'
-let g:gruvbox_material_disable_italic_comment='0'
-let g:gruvbox_material_enable_bold='1'
-" let g:gruvbox_material_visual='reverse'
-" let g:gruvbox_material_sign_column_background='grey'
+let g:gruvbox_material_disable_italic_comment='-1'
+let g:gruvbox_material_enable_bold='0'
 colorscheme gruvbox-material
-" let g:gruvbox_contrast_dark
-" colorscheme moonfly
-" colorscheme tender
-" let ayucolor="dark"   " dark, mirage, light
-" colorscheme ayu
-" let g:vim_monokai_tasty_italic = 1
-" colorscheme vim-monokai-tasty
-" let g:lightline = { 'colorscheme': 'moonfly' }
+" colorscheme tokyonight-night
 
-" Set a custom font you have installed on your computer.
-" Syntax: set guifont=<font_name>\ <font_weight>\ <size>
-" set guifont=Monospace\ Regular\ 12
 set guifont=DroidSansMono\ Nerd\ Font\ 11
 
-" set guifont=PowerlineSymbols\ 11
 " Vim jump to the last position when reopening a file
 if has("autocmd")
     au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$")
@@ -209,6 +202,19 @@ inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
 inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 inoremap <silent><expr> <cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
 
+" Json files
+autocmd FileType json syntax match Comment +\/\/.\+$+
+
+" config file
+function! SetupCommandAbbrs(from, to)
+  exec 'cnoreabbrev <expr> '.a:from
+        \ .' ((getcmdtype() ==# ":" && getcmdline() ==# "'.a:from.'")'
+        \ .'? ("'.a:to.'") : ("'.a:from.'"))'
+endfunction
+
+" Use C to open coc config
+call SetupCommandAbbrs('C', 'CocConfig')
+
 " To run cargo run automatically
 nnoremap <F2> :!cargo run<CR>
 
@@ -219,7 +225,7 @@ vnoremap <C-c> :TComment<CR>
 " Airline
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
-let g:airline_theme='wonbat'
+let g:airline_theme='base16'
 " let g:airline_theme = 'tender'
 " let g:airline_theme='gruvbox'
 let g:airline#extensions#tabline#left_sep = ' '
@@ -288,86 +294,7 @@ function! Battery_icon()
   return printf('%s', get(battery_icon, nf))
 endfunction
 let g:airline_section_x = airline#section#create(['%{battery#sign()} %{battery#value()}%% %{Battery_icon()}'])
-"
-" " Custom fold function
-" function! CustomFoldText_2()
-"   let indentation = indent(v:foldstart - 1)
-"   let foldSize = 1 + v:foldend - v:foldstart
-"   let foldSizeStr = " " . foldSize . " lines "
-"   let foldLevelStr = repeat("+--", v:foldlevel)
-"   let expansionString = repeat(" ", indentation)
-"
-"   return expansionString . foldLevelStr . foldSizeStr
-" endfunction
-"
-"
-" function! CustomFoldText_1()
-"   let indentation = indent(v:foldstart - 1)
-"   let foldSize = 1 + v:foldend - v:foldstart
-"   let foldSizeStr = " " . foldSize . " lines "
-"   let foldLevelStr = repeat("+--", v:foldlevel)
-"   let expansionString = repeat(" ", indentation)
-"
-"   return expansionString . foldLevelStr . foldSizeStr
-" endfunction
-"
-" function! GetPotionFold(lnum)
-"     if getline(a:lnum) =~? '\v^\s*$'
-"         return '-1'
-"     endif
-"
-"     let this_indent = IndentLevel(a:lnum)
-"     let next_indent = IndentLevel(NextNonBlankLine(a:lnum))
-"
-"     if next_indent == this_indent
-"         return this_indent
-"     elseif next_indent < this_indent
-"         return this_indent
-"     elseif next_indent > this_indent
-"         return '>' . next_indent
-"     endif
-" endfunction
-"
-" function! IndentLevel(lnum)
-"     return indent(a:lnum) / &shiftwidth
-" endfunction
-"
-" function! NextNonBlankLine(lnum)
-"   let numlines = line('$')
-"   let current = a:lnum + 1
-"
-"   while current <= numlines
-"       if getline(current) =~? '\v\S'
-"           return current
-"       endif
-"
-"       let current += 1
-"   endwhile
-"
-"   return -2
-" endfunction
-"
-" function! CustomFoldText()
-"   " get first non-blank line
-"   let fs = v:foldstart
-"
-"   while getline(fs) =~ '^\s*$' | let fs = nextnonblank(fs + 1)
-"   endwhile
-"
-"   if fs > v:foldend
-"       let line = getline(v:foldstart)
-"   else
-"       let line = substitute(getline(fs), '\t', repeat(' ', &tabstop), 'g')
-"   endif
-"
-"   let w = winwidth(0) - &foldcolumn - (&number ? 8 : 0)
-"   let foldSize = 1 + v:foldend - v:foldstart
-"   let foldSizeStr = " " . foldSize . " lines "
-"   let foldLevelStr = repeat("+--", v:foldlevel)
-"   let expansionString = repeat(" ", w - strwidth(foldSizeStr.line.foldLevelStr))
-"   return line . expansionString . foldSizeStr . foldLevelStr
-" endfunction
-"
+
 " Tab show
 let g:indentLine_setColors = 0
 let g:indentLine_defaultGroup = 'SpecialKey'
@@ -385,13 +312,16 @@ call wilder#setup({'modes': [':', '/', '?']})
 
 call wilder#set_option('pipeline', [
     \   wilder#branch(
-    \     wilder#python_file_finder_pipeline({
-    \       'file_command': ['find', '.', '-type', 'f', '-printf', '%P\n'],
-    \       'dir_command': ['find', '.', '-type', 'd', '-printf', '%P\n'],
-    \       'filters': ['fuzzy_filter', 'difflib_sorter'],
+    \    wilder#cmdline_pipeline({
+    \       'language': 'python',
+    \       'fuzzy': 1,
     \     }),
     \     wilder#cmdline_pipeline(),
-    \     wilder#python_search_pipeline(),
+    \     wilder#python_search_pipeline({
+    \       'pattern': wilder#python_fuzzy_pattern(),
+    \       'sorter': wilder#python_difflib_sorter(),
+    \       'engine': 're',
+    \   }),
     \   ),
     \ ])
 
@@ -403,7 +333,7 @@ call wilder#set_option('renderer', wilder#popupmenu_renderer({
     \ 'highlights': {
     \   'accent': wilder#make_hl('WilderAccent', 'Pmenu', [{}, {}, {'foreground': '#f4468f'}]),
     \ },
-    \ 'pumblend': 20,
+    \ 'pumblend':100,
     \ 'left': [
     \   ' ', wilder#popupmenu_devicons(),
     \ ],
@@ -419,16 +349,18 @@ call wilder#set_option('renderer', wilder#popupmenu_renderer(wilder#popupmenu_bo
     \ 'border': 'rounded',
     \ })))
 
-call wilder#set_option('renderer', wilder#popupmenu_renderer(wilder#popupmenu_palette_theme({
-    \ 'border': 'rounded',
-    \ 'max_height': '75%',
-    \ 'min_height': 0,
-    \ 'prompt_position': 'top',
-    \ 'reverse': 0,
-    \ })))
+" call wilder#set_option('renderer', wilder#popupmenu_renderer(wilder#popupmenu_palette_theme({
+"     \ 'border': 'rounded',
+"     \ 'max_height': '75%',
+"     \ 'min_height': 0,
+"     \ 'prompt_position': 'top',
+"     \ 'reverse': 0,
+"     \ })))
 
-call wilder#set_option('renderer', wilder#renderer_mux({
-      \ ':': wilder#popupmenu_renderer(wilder#popupmenu_palette_theme()),
-      \ '/': wilder#popupmenu_renderer(),
-      \ }))
-
+" call wilder#set_option('renderer', wilder#renderer_mux({
+"       \ ':': wilder#popupmenu_renderer(wilder#popupmenu_palette_theme()),
+"       \ '/': wilder#popupmenu_renderer(),
+"       \ }))
+" Python
+autocmd FileType python map <buffer> <F9> :w<CR>:exec '!python3' shellescape(@%, 1)<CR>
+autocmd FileType python imap <buffer> <F9> <esc>:w<CR>:exec '!python3' shellescape(@%, 1)<CR>
