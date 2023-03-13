@@ -216,7 +216,6 @@ endfunction
 call SetupCommandAbbrs('C', 'CocConfig')
 
 " To run cargo run automatically
-nnoremap <F2> :!cargo run<CR>
 
 " commenter
 nnoremap <C-c> :TComment<CR>
@@ -364,3 +363,6 @@ call wilder#set_option('renderer', wilder#popupmenu_renderer(wilder#popupmenu_bo
 " Python
 autocmd FileType python map <buffer> <F9> :w<CR>:exec '!python3' shellescape(@%, 1)<CR>
 autocmd FileType python imap <buffer> <F9> <esc>:w<CR>:exec '!python3' shellescape(@%, 1)<CR>
+
+
+autocmd FileTpe rust map <buffer> <F9> :w<CR>:exec '!cargo run'<CR>
